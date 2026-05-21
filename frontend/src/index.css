@@ -2,11 +2,16 @@
 
 :root {
   /* Backgrounds */
-  --bg-app:        #F5F2EE;
-  --bg-sidebar:    #FAFAF8;
-  --bg-editor:     #FFFFFF;
+  --bg-app:        #F7FFF7;
+  --bg-sidebar:    #7EA172;
+  --bg-editor:     #F7FFF7;
   --bg-elevated:   #FFFFFF;
-  --bg-hover:      #F5F0EB;
+  --bg-hover:      rgba(255,255,255,0.15);
+
+  /* Sidebar text */
+  --sidebar-text:         #FFFFFF;
+  --sidebar-text-muted:   rgba(255,255,255,0.6);
+  --sidebar-text-label:   rgba(255,255,255,0.5);
 
   /* Borders */
   --border:        #EDE8E3;

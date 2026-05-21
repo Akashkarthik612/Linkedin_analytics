@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.vault.router import router as vault_router
+from backend.ai.router import router as ai_router
 
 app = FastAPI()
 
@@ -17,6 +18,7 @@ app.add_middleware(
 )
 
 app.include_router(vault_router)
+app.include_router(ai_router)
 
 
 @app.get("/health")
