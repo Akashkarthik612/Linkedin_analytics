@@ -1,31 +1,45 @@
 import { useState, useRef, useEffect } from 'react';
 import styles from './AIAssistant.module.css';
 
+const GREETING = { role: 'assistant', content: 'How may I help you?' };
+
 export function AIAssistant() {
   const [open, setOpen]       = useState(false);
   const [prompt, setPrompt]   = useState('');
-  const [answer, setAnswer]   = useState('');
+  const [messages, setMessages] = useState([GREETING]);
   const [loading, setLoading] = useState(false);
+  const bottomRef             = useRef(null);
   const textareaRef           = useRef(null);
 
   useEffect(() => {
     if (open && textareaRef.current) textareaRef.current.focus();
   }, [open]);
 
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
+
   async function handleSend() {
     if (!prompt.trim() || loading) return;
+
+    const userMsg = { role: 'user', content: prompt.trim() };
+    setMessages(prev => [...prev, userMsg]);
+    setPrompt('');
     setLoading(true);
-    setAnswer('');
+
     try {
-      const res  = await fetch('http://localhost:8000/api/ai/query', {
+      const res = await fetch('http://localhost:8000/api/ai/query', {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ prompt: prompt.trim() }),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id':    localStorage.getItem('user_id') || '',
+        },
+        body: JSON.stringify({ prompt: userMsg.content }),
       });
       const data = await res.json();
-      setAnswer(data.answer);
+      setMessages(prev => [...prev, { role: 'assistant', content: data.answer }]);
     } catch {
-      setAnswer('Something went wrong. Make sure the backend is running.');
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Something went wrong. Make sure the backend is running.' }]);
     } finally {
       setLoading(false);
     }
@@ -51,17 +65,23 @@ export function AIAssistant() {
             <button className={styles.close} onClick={() => setOpen(false)}>✕</button>
           </div>
 
-          {answer && (
-            <div className={styles.answer}>
-              {loading ? <span className={styles.thinking}>Thinking…</span> : answer}
-            </div>
-          )}
-
-          {!answer && loading && (
-            <div className={styles.answer}>
-              <span className={styles.thinking}>Thinking…</span>
-            </div>
-          )}
+          <div className={styles.chat}>
+            {messages.map((msg, i) => (
+              <div key={i} className={msg.role === 'user' ? styles.userBubble : styles.aiBubble}>
+                {msg.content}
+              </div>
+            ))}
+            {loading && (
+              <div className={styles.aiBubble}>
+                <span className={styles.thinking}>
+                  <span className={styles.dot} />
+                  <span className={styles.dot} />
+                  <span className={styles.dot} />
+                </span>
+              </div>
+            )}
+            <div ref={bottomRef} />
+          </div>
 
           <div className={styles.inputRow}>
             <textarea
@@ -71,14 +91,14 @@ export function AIAssistant() {
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
               onKeyDown={handleKeyDown}
-              rows={3}
+              rows={2}
             />
             <button
               className={styles.send}
               onClick={handleSend}
               disabled={loading || !prompt.trim()}
             >
-              {loading ? '…' : '↑'}
+              ↑
             </button>
           </div>
         </div>

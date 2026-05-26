@@ -41,13 +41,10 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
 
-    # HNSW index for fast approximate nearest-neighbour cosine search
-    op.execute(
-        "CREATE INDEX post_embeddings_hnsw_idx ON post_embeddings "
-        "USING hnsw (embedding vector_cosine_ops)"
-    )
+    # Note: HNSW/IVFFlat indexes are limited to 2000 dims; Gemini embedding-001
+    # outputs 3072 dims so we rely on sequential scan (fine at small scale).
+    # Add an IVFFlat index with reduced dims when the dataset grows.
 
 
 def downgrade() -> None:
-    op.execute("DROP INDEX IF EXISTS post_embeddings_hnsw_idx")
     op.drop_table("post_embeddings")
